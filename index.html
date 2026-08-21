@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Safety Messenger | Leroy Merlin</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Configuração de Cores Leroy Merlin -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        lm: {
+                            dark: '#00583A', // Verde Escuro Leroy Merlin
+                            light: '#78BE20', // Verde Claro/Lima Leroy Merlin
+                            bg: '#F5F7F6',
+                            text: '#333333'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <!-- QR Code Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #F5F7F6; color: #333333; }
+        .hide { display: none !important; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+
+        /* Loader */
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #78BE20;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Modal Transition */
+        #qrModal { transition: transform 0.3s ease-in-out; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- HEADER -->
+    <header class="bg-lm-dark text-white shadow-md relative z-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="window.showView('roleSelector')">
+                <div class="bg-lm-light p-2 rounded-lg">
+                    <i class="ph ph-shield-check text-xl text-lm-dark font-bold"></i>
+                </div>
+                <h1 class="text-xl font-bold tracking-tight">Safety Messenger</h1>
+            </div>
+            <div id="userInfo" class="flex items-center gap-2 hide text-sm font-medium bg-white/10 px-3 py-1.5 rounded-full">
+                <i class="ph ph-user-circle text-lg"></i>
+                <span id="currentUserRole">Perfil</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative">
+        
+        <!-- 1. ROLE SELECTOR (Ecrã Inicial) -->
+        <div id="roleSelector" class="view-section flex flex-col items-center justify-center min-h-[60vh] max-w-2xl mx-auto text-center space-y-8">
+            <div class="space-y-3">
+                <h2 class="text-3xl font-bold text-lm-dark">Bem-vindo ao Safety Messenger</h2>
+                <p class="text-gray-500">Selecione o seu perfil para aceder à plataforma.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                <button onclick="window.showView('tsstView')" class="bg-white hover:border-lm-light hover:shadow-lg border border-gray-200 rounded-2xl p-6 flex flex-col items-center gap-4 transition-all group">
+                    <div class="bg-lm-bg text-lm-dark p-4 rounded-full group-hover:bg-lm-light group-hover:text-white transition-colors">
+                        <i class="ph ph-pencil-simple text-3xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-800">Técnico de Segurança</h3>
+                        <p class="text-sm text-gray-500 mt-1">Criar alertas, reportar acidentes e temas para briefings.</p>
+                    </div>
+                </button>
+
+                <button onclick="window.showView('coordenadorView')" class="bg-white hover:border-lm-light hover:shadow-lg border border-gray-200 rounded-2xl p-6 flex flex-col items-center gap-4 transition-all group">
+                    <div class="bg-lm-bg text-lm-dark p-4 rounded-full group-hover:bg-lm-light group-hover:text-white transition-colors">
+                        <i class="ph ph-users-three text-3xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-800">Coordenador de Prevenção</h3>
+                        <p class="text-sm text-gray-500 mt-1">Ver feed, conduzir briefings e recolher assinaturas.</p>
+                    </div>
+                </button>
+            </div>
+        </div>
+
+        <!-- 2. TSST VIEW -->
+        <div id="tsstView" class="view-section hide max-w-3xl mx-auto space-y-6">
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h2 class="text-2xl font-bold text-lm-dark">Nova Comunicação</h2>
+                    <p class="text-sm text-gray-500">Escreva e publique conteúdos para a equipa.</p>
+                </div>
+                <button onclick="window.showView('roleSelector')" class="text-gray-500 hover:text-lm-dark transition-colors flex items-center gap-2">
+                    <i class="ph ph-arrow-left"></i> Voltar
+                </button>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-5">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Categoria</label>
+                    <div class="grid grid-cols-3 gap-3">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="msgType" value="Alerta" class="peer sr-only" checked>
+                            <div class="text-center p-3 rounded-xl border-2 border-gray-100 peer-checked:border-lm-light peer-checked:bg-lm-bg transition-all font-medium text-gray-600 peer-checked:text-lm-dark flex flex-col items-center gap-1">
+                                <i class="ph-fill ph-warning-circle text-xl text-yellow-500"></i> Alerta
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="msgType" value="Acidente" class="peer sr-only">
+                            <div class="text-center p-3 rounded-xl border-2 border-gray-100 peer-checked:border-lm-light peer-checked:bg-lm-bg transition-all font-medium text-gray-600 peer-checked:text-lm-dark flex flex-col items-center gap-1">
+                                <i class="ph-fill ph-ambulance text-xl text-red-500"></i> Acidente
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="msgType" value="Briefing" class="peer sr-only">
+                            <div class="text-center p-3 rounded-xl border-2 border-gray-100 peer-checked:border-lm-light peer-checked:bg-lm-bg transition-all font-medium text-gray-600 peer-checked:text-lm-dark flex flex-col items-center gap-1">
+                                <i class="ph-fill ph-megaphone text-xl text-blue-500"></i> Briefing
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Botão Inteligência Artificial -->
+                <div>
+                    <button onclick="window.openAiModal()" class="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-lm-light to-lm-dark text-white p-3 rounded-xl hover:shadow-lg transition-all font-medium">
+                        <i class="ph ph-magic-wand text-lg"></i> Gerar texto com Inteligência Artificial
+                    </button>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Título</label>
+                    <input type="text" id="msgTitle" placeholder="Ex: Regras de circulação de empilhadores" class="w-full p-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-lm-light focus:border-transparent transition-all">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Conteúdo da Mensagem</label>
+                    <textarea id="msgContent" rows="5" placeholder="Escreva os detalhes, regras ou informações importantes aqui..." class="w-full p-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-lm-light focus:border-transparent transition-all resize-none"></textarea>
+                </div>
+
+                <div class="pt-4 border-t border-gray-100 flex justify-end">
+                    <button id="btnPublish" onclick="window.publishMessage()" class="bg-lm-dark hover:bg-[#00422c] text-white px-6 py-3 rounded-xl font-medium transition-colors flex items-center gap-2">
+                        <span>Publicar</span> <i class="ph ph-paper-plane-right"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div id="publishSuccess" class="hide bg-green-50 border border-green-200 text-green-700 p-4 rounded-xl flex items-center gap-3">
+                <i class="ph-fill ph-check-circle text-2xl"></i>
+                <div>
+                    <p class="font-bold">Publicado com sucesso!</p>
+                    <p class="text-sm">A comunicação já está disponível para os coordenadores.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. COORDENADOR VIEW (Feed) -->
+        <div id="coordenadorView" class="view-section hide w-full space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                <div>
+                    <h2 class="text-2xl font-bold text-lm-dark">Feed de Prevenção</h2>
+                    <p class="text-sm text-gray-500">Últimos alertas e temas para abordar com a equipa.</p>
+                </div>
+                <button onclick="window.showView('roleSelector')" class="text-gray-500 hover:text-lm-dark transition-colors flex items-center gap-2 self-start md:self-auto">
+                    <i class="ph ph-arrow-left"></i> Mudar Perfil
+                </button>
+            </div>
+
+            <!-- Feed Container -->
+            <div id="feedContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Messages will be injected here via JS -->
+                <div class="col-span-full flex flex-col items-center justify-center py-12 text-gray-400">
+                    <div class="loader mb-4"></div>
+                    <p>A carregar comunicações...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. COLABORADOR VIEW (Assinatura) -->
+        <div id="colaboradorView" class="view-section hide max-w-md mx-auto relative pt-10">
+            <!-- Simulated Mobile Frame -->
+            <div class="bg-white rounded-[2rem] shadow-2xl border-4 border-gray-100 p-6 overflow-hidden relative min-h-[500px] flex flex-col">
+                <div class="absolute top-0 left-0 w-full h-2 bg-lm-light"></div>
+                
+                <!-- Add this Back Button specifically for the simulation -->
+                <button onclick="window.exitSignView()" class="mb-4 text-gray-500 hover:text-lm-dark transition-colors flex items-center gap-2 text-sm font-medium self-start bg-gray-100 px-3 py-1.5 rounded-lg">
+                    <i class="ph ph-arrow-left"></i> Voltar ao Painel
+                </button>
+
+                <div class="text-center mb-6 mt-4">
+                    <div class="bg-lm-bg w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <i class="ph-fill ph-clipboard-text text-3xl text-lm-dark"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-800">Registo de Presença</h2>
+                    <p id="colaboradorTopicTitle" class="text-sm text-lm-dark font-medium mt-2 bg-lm-bg p-2 rounded-lg inline-block w-full line-clamp-2">A carregar tema...</p>
+                </div>
+
+                <form id="signForm" class="space-y-4 mt-auto" onsubmit="window.submitSignature(event)">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Nome Completo</label>
+                        <input type="text" id="workerName" required class="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-lm-light focus:border-transparent transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Nº Mecanográfico</label>
+                        <input type="number" id="workerId" required class="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-lm-light focus:border-transparent transition-all">
+                    </div>
+                    <button type="submit" id="btnSubmitSign" class="w-full bg-lm-dark hover:bg-[#00422c] text-white p-4 rounded-xl font-bold text-lg transition-colors shadow-lg shadow-lm-dark/20 flex items-center justify-center gap-2 mt-4">
+                        <span>Confirmar Presença</span> <i class="ph ph-check-circle"></i>
+                    </button>
+                </form>
+
+                <div id="signSuccessMsg" class="hide flex flex-col items-center justify-center text-center space-y-3 mt-auto mb-10">
+                    <div class="bg-green-100 text-green-600 p-4 rounded-full">
+                        <i class="ph-fill ph-check-circle text-5xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-800">Assinatura Registada!</h3>
+                    <p class="text-gray-500 text-sm">Obrigado pela sua presença. Trabalhe em segurança!</p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- MODAL DE INTELIGÊNCIA ARTIFICIAL -->
+    <div id="aiModal" class="fixed inset-0 z-[60] hide flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm" onclick="window.closeAiModal()"></div>
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg relative z-10 flex flex-col max-h-[90vh]">
+            <div class="p-5 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-lm-light/10 to-transparent rounded-t-2xl">
+                <div class="flex items-center gap-2 text-lm-dark font-bold text-lg">
+                    <i class="ph-fill ph-magic-wand text-lm-light"></i> Assistente IA
+                </div>
+                <button onclick="window.closeAiModal()" class="text-gray-400 hover:text-gray-700 p-1">
+                    <i class="ph ph-x text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="p-5 space-y-4 overflow-y-auto">
+                <p class="text-sm text-gray-600">Descreva de forma simples o que aconteceu ou o tema, e eu transformo num texto profissional.</p>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Rascunho / Tópicos</label>
+                    <textarea id="aiPrompt" rows="4" placeholder="Ex: um gajo escorregou no corredor 3 por causa de água, avisar para limparem sempre" class="w-full p-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-lm-light focus:border-transparent transition-all resize-none"></textarea>
+                </div>
+            </div>
+
+            <div class="p-5 border-t border-gray-100 bg-gray-50 rounded-b-2xl flex justify-end gap-3">
+                <button onclick="window.closeAiModal()" class="px-4 py-2 text-gray-600 font-medium hover:bg-gray-200 rounded-lg transition-colors">Cancelar</button>
+                <button id="btnAiGenerate" onclick="window.generateWithAi()" class="bg-gradient-to-r from-lm-light to-lm-dark text-white px-5 py-2 rounded-lg font-medium transition-all shadow-md flex items-center gap-2">
+                    <span>Gerar Texto</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE-OVER PANEL FOR QR CODE & SIGNATURES -->
+    <div id="modalOverlay" class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-40 hide" onclick="window.closeModal()"></div>
+    
+    <div id="qrModal" class="fixed top-0 right-0 h-full w-full md:w-[800px] bg-gray-50 shadow-2xl z-50 transform translate-x-full hide flex flex-col">
+        <!-- Header Modal -->
+        <div class="bg-white px-6 py-4 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
+            <div>
+                <h3 class="text-lg font-bold text-gray-800">Recolha de Assinaturas</h3>
+                <p id="modalTopic" class="text-sm text-gray-500">A carregar...</p>
+            </div>
+            <button onclick="window.closeModal()" class="p-2 hover:bg-gray-100 rounded-full text-gray-500 transition-colors">
+                <i class="ph ph-x text-xl"></i>
+            </button>
+        </div>
+
+        <!-- Content Modal -->
+        <div class="flex-grow flex flex-col md:flex-row overflow-hidden">
+            <!-- Left Side: QR Code -->
+            <div class="w-full md:w-5/12 bg-lm-dark text-white p-6 flex flex-col items-center justify-center relative shadow-inner flex-shrink-0 border-b md:border-b-0 md:border-r border-lm-dark/20">
+                <div class="text-center mb-6">
+                    <i class="ph ph-scan text-4xl mb-2 text-lm-light"></i>
+                    <h4 class="font-bold text-lg">Registar Presença</h4>
+                    <p class="text-xs text-gray-300 mt-1">Aponte a câmara do telemóvel para assinar.</p>
+                </div>
+                
+                <div class="bg-white p-4 rounded-2xl shadow-xl">
+                    <div id="qrcode"></div>
+                </div>
+                
+                <!-- Link fallback + Simulation button -->
+                <div class="mt-8 text-center space-y-3 w-full">
+                    <button onclick="window.copySignLink()" class="flex items-center justify-center gap-2 w-full px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm transition-colors">
+                        <i class="ph ph-link"></i> Copiar Link
+                    </button>
+                    
+                    <!-- NEW: Simulation Button to easily test locally -->
+                    <button onclick="window.openSignView()" class="flex items-center justify-center gap-2 w-full px-4 py-3 bg-lm-light hover:bg-green-400 text-lm-dark font-bold rounded-lg text-sm transition-colors shadow-lg">
+                        <i class="ph-fill ph-device-mobile"></i> Simular ecrã do Trabalhador
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Side: List of Signatures -->
+            <div class="w-full md:w-7/12 bg-white flex flex-col h-full overflow-hidden">
+                <div class="p-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+                    <h4 class="font-bold text-gray-700 flex items-center gap-2">
+                        <i class="ph-fill ph-users text-lm-dark"></i> Presenças Registadas
+                    </h4>
+                    <span id="signatureCount" class="bg-lm-light text-lm-dark text-xs font-bold px-2 py-1 rounded-full">0</span>
+                </div>
+                
+                <!-- Lista scrollable -->
+                <div id="signaturesList" class="flex-grow overflow-y-auto p-4 space-y-2">
+                    <!-- Signatures injected here -->
+                    <div class="flex flex-col items-center justify-center h-full text-gray-400 space-y-2">
+                        <i class="ph ph-hourglass text-3xl"></i>
+                        <p class="text-sm">A aguardar assinaturas...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FIREBASE & LOGIC -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'safety-messenger-app';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        
+        let app, db, auth;
+        let unsubscribeMessages = null;
+        let unsubscribeSignatures = null;
+        let allMessages = [];
+        
+        // Global variables required for the flow
+        window.currentQrMessageId = null; 
+        window.messageIdToSign = null; 
+        window.qrCodeInstance = null;
+
+        try {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+            
+            // Authentication
+            const token = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+            if (token) {
+                await signInWithCustomToken(auth, token);
+            } else {
+                await signInAnonymously(auth);
+            }
+            console.log("Firebase Auth Success");
+            initApp();
+        } catch (error) {
+            console.error("Firebase Init Error:", error);
+            // Even if Firebase fails, setup basic UI to avoid blank screen
+            document.getElementById('roleSelector').classList.remove('hide');
+        }
+
+        // --- NAVIGATION & VIEWS ---
+        window.hideAllViews = function() {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hide'));
+            document.getElementById('userInfo').classList.add('hide');
+        }
+
+        window.showView = function(viewId) {
+            window.hideAllViews();
+            document.getElementById(viewId).classList.remove('hide');
+            
+            // Update User Info Header
+            const userInfo = document.getElementById('userInfo');
+            const userRole = document.getElementById('currentUserRole');
+            
+            if(viewId === 'tsstView') {
+                userInfo.classList.remove('hide');
+                userRole.innerText = 'Técnico de Segurança';
+            } else if(viewId === 'coordenadorView') {
+                userInfo.classList.remove('hide');
+                userRole.innerText = 'Coord. Prevenção';
+                loadMessages(); // Load feed when opening view
+            }
+        }
+
+        // --- TSST FUNCTIONS (CREATE MSG & AI) ---
+        window.publishMessage = async function() {
+            const btn = document.getElementById('btnPublish');
+            const titleInput = document.getElementById('msgTitle');
+            const contentInput = document.getElementById('msgContent');
+            const typeInput = document.querySelector('input[name="msgType"]:checked').value;
+
+            if(!titleInput.value || !contentInput.value) {
+                alert("Preencha o título e o conteúdo."); // Custom UI is better, but alert is fallback
+                return;
+            }
+
+            try {
+                btn.disabled = true;
+                btn.innerHTML = '<div class="loader !w-5 !h-5 !border-white !border-t-lm-light"></div> Publicando...';
+
+                const messagesRef = collection(db, 'artifacts', appId, 'public', 'data', 'messages');
+                await addDoc(messagesRef, {
+                    type: typeInput,
+                    title: titleInput.value,
+                    content: contentInput.value,
+                    createdAt: serverTimestamp(),
+                    author: "TSST",
+                });
+
+                // Reset form
+                titleInput.value = '';
+                contentInput.value = '';
+                
+                // Show success message briefly
+                const successDiv = document.getElementById('publishSuccess');
+                successDiv.classList.remove('hide');
+                setTimeout(() => successDiv.classList.add('hide'), 3000);
+
+            } catch (error) {
+                console.error("Error adding document: ", error);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<span>Publicar</span> <i class="ph ph-paper-plane-right"></i>';
+            }
+        }
+
+        // AI Logic
+        window.openAiModal = function() {
+            document.getElementById('aiModal').classList.remove('hide');
+        }
+
+        window.closeAiModal = function() {
+            document.getElementById('aiModal').classList.add('hide');
+            document.getElementById('aiPrompt').value = '';
+        }
+
+        window.generateWithAi = async function() {
+            const promptInput = document.getElementById('aiPrompt').value;
+            if(!promptInput.trim()) return;
+
+            const btn = document.getElementById('btnAiGenerate');
+            btn.innerHTML = '<div class="loader !w-4 !h-4 !border-white !border-t-lm-light"></div> A pensar...';
+            btn.disabled = true;
+
+            const msgType = document.querySelector('input[name="msgType"]:checked').value;
+            
+            const systemPrompt = `És um Especialista de Segurança no Trabalho (TSST) na empresa Leroy Merlin. 
+            O teu tom é profissional, direto e preocupado com a segurança.
+            Transforma o rascunho do utilizador numa comunicação estruturada do tipo: ${msgType}.
+            Formata a resposta estritamente em JSON com duas propriedades: "title" (um título claro e profissional) e "content" (o texto estruturado e formatado).
+            Não uses Markdown dentro do JSON.`;
+
+            const payload = {
+                contents: [{ parts: [{ text: promptInput }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            title: { type: "STRING" },
+                            content: { type: "STRING" }
+                        },
+                        required: ["title", "content"]
+                    }
+                }
+            };
+
+            try {
+                // Using Gemini API natively through the environment context
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=`;
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await response.json();
+                if (result.candidates && result.candidates.length > 0) {
+                    const jsonStr = result.candidates[0].content.parts[0].text;
+                    const parsed = JSON.parse(jsonStr);
+                    
+                    document.getElementById('msgTitle').value = parsed.title;
+                    document.getElementById('msgContent').value = parsed.content;
+                    window.closeAiModal();
+                }
+            } catch(e) {
+                console.error("AI Error:", e);
+                alert("Erro ao comunicar com a IA. Tente novamente.");
+            } finally {
+                btn.innerHTML = '<span>Gerar Texto</span>';
+                btn.disabled = false;
+            }
+        }
+
+        // --- COORDENADOR FUNCTIONS (FEED & QR) ---
+        function loadMessages() {
+            if(!auth.currentUser) return;
+            if(unsubscribeMessages) unsubscribeMessages();
+
+            const messagesRef = collection(db, 'artifacts', appId, 'public', 'data', 'messages');
+            
+            unsubscribeMessages = onSnapshot(messagesRef, (snapshot) => {
+                allMessages = [];
+                snapshot.forEach(doc => {
+                    allMessages.push({ id: doc.id, ...doc.data() });
+                });
+                
+                // Sort client side (Rule 2: No complex queries)
+                allMessages.sort((a, b) => {
+                    const timeA = a.createdAt?.toMillis() || 0;
+                    const timeB = b.createdAt?.toMillis() || 0;
+                    return timeB - timeA;
+                });
+                
+                renderFeed();
+            }, (error) => console.error("Error fetching messages:", error));
+        }
+
+        function renderFeed() {
+            const container = document.getElementById('feedContainer');
+            container.innerHTML = '';
+            
+            if(allMessages.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full flex flex-col items-center justify-center py-12 text-gray-400 bg-white rounded-2xl border border-gray-100">
+                        <i class="ph ph-tray text-4xl mb-2"></i>
+                        <p>Nenhuma comunicação disponível.</p>
+                    </div>`;
+                return;
+            }
+
+            allMessages.forEach(msg => {
+                // Color and Icon logic based on type
+                let typeColor = "text-blue-600 bg-blue-50 border-blue-200";
+                let typeIcon = "ph-megaphone";
+                if(msg.type === "Alerta") {
+                    typeColor = "text-yellow-700 bg-yellow-50 border-yellow-200";
+                    typeIcon = "ph-warning-circle";
+                } else if(msg.type === "Acidente") {
+                    typeColor = "text-red-600 bg-red-50 border-red-200";
+                    typeIcon = "ph-ambulance";
+                }
+
+                // Date formatting safely
+                let dateStr = "Agora mesmo";
+                if(msg.createdAt) {
+                    const d = msg.createdAt.toDate();
+                    dateStr = d.toLocaleDateString('pt-PT') + ' ' + d.toLocaleTimeString('pt-PT', {hour: '2-digit', minute:'2-digit'});
+                }
+
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex flex-col h-full hover:shadow-md transition-shadow";
+                card.innerHTML = `
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs font-bold px-2 py-1 rounded-md border flex items-center gap-1 ${typeColor}">
+                            <i class="ph-fill ${typeIcon}"></i> ${msg.type}
+                        </span>
+                        <span class="text-xs text-gray-400 flex items-center gap-1">
+                            <i class="ph ph-clock"></i> ${dateStr}
+                        </span>
+                    </div>
+                    <h3 class="font-bold text-gray-800 text-lg mb-2 line-clamp-2">${msg.title}</h3>
+                    <p class="text-sm text-gray-600 mb-6 flex-grow whitespace-pre-wrap line-clamp-4">${msg.content}</p>
+                    
+                    <button onclick="window.openQrModal('${msg.id}')" class="mt-auto w-full py-2.5 bg-lm-bg hover:bg-lm-light hover:text-white text-lm-dark font-semibold rounded-xl transition-colors border border-lm-light/20 flex items-center justify-center gap-2">
+                        <i class="ph ph-qr-code text-lg"></i> Gerar Assinaturas
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // --- MODAL & QR LOGIC ---
+        window.openQrModal = function(msgId) {
+            window.currentQrMessageId = msgId;
+            const msg = allMessages.find(m => m.id === msgId);
+            if(!msg) return;
+
+            document.getElementById('modalTopic').innerText = msg.title;
+            
+            // Build the URL for the worker. In production this would be the actual domain.
+            const currentUrl = window.location.href.split('?')[0];
+            const signUrl = `${currentUrl}?sign=${msgId}`;
+            
+            // Generate QR Code
+            const qrContainer = document.getElementById('qrcode');
+            qrContainer.innerHTML = '';
+            window.qrCodeInstance = new QRCode(qrContainer, {
+                text: signUrl,
+                width: 200,
+                height: 200,
+                colorDark : "#00583A", // Leroy Merlin Dark Green
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+
+            // Show modals
+            document.getElementById('modalOverlay').classList.remove('hide');
+            const qrModal = document.getElementById('qrModal');
+            qrModal.classList.remove('hide', 'hidden');
+            // Small timeout to allow display:block to apply before animating transform
+            setTimeout(() => {
+                qrModal.classList.remove('translate-x-full');
+            }, 10);
+
+            // Listen for signatures for this specific message
+            listenForSignatures(msgId);
+        }
+
+        window.closeModal = function() {
+            const qrModal = document.getElementById('qrModal');
+            qrModal.classList.add('translate-x-full');
+            document.getElementById('modalOverlay').classList.add('hide');
+            
+            setTimeout(() => {
+                qrModal.classList.add('hide', 'hidden');
+            }, 300); // Wait for transition
+
+            if(unsubscribeSignatures) {
+                unsubscribeSignatures();
+                unsubscribeSignatures = null;
+            }
+        }
+
+        window.copySignLink = function() {
+            const currentUrl = window.location.href.split('?')[0];
+            const signUrl = `${currentUrl}?sign=${window.currentQrMessageId}`;
+            
+            // Modern way to copy to clipboard (with fallback if iframe blocked)
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(signUrl).then(() => {
+                    // Visual feedback
+                });
+            } else {
+                // Fallback for older browsers or iframes
+                let textArea = document.createElement("textarea");
+                textArea.value = signUrl;
+                textArea.style.position = "fixed";
+                textArea.style.left = "-999999px";
+                textArea.style.top = "-999999px";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                } catch (err) {}
+                textArea.remove();
+            }
+            alert("Link copiado! Pode enviar no WhatsApp/Teams aos trabalhadores.");
+        }
+
+        // --- SIGNATURES REALTIME LISTENER ---
+        function listenForSignatures(msgId) {
+            if(!auth.currentUser) return;
+            if(unsubscribeSignatures) unsubscribeSignatures();
+
+            const sigRef = collection(db, 'artifacts', appId, 'public', 'data', 'signatures');
+            
+            // Using basic query, filtering locally if needed
+            unsubscribeSignatures = onSnapshot(sigRef, (snapshot) => {
+                const list = document.getElementById('signaturesList');
+                let count = 0;
+                let html = '';
+
+                let sigs = [];
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    if(data.messageId === msgId) {
+                        sigs.push({id: doc.id, ...data});
+                    }
+                });
+
+                // Sort by time
+                sigs.sort((a, b) => {
+                    const timeA = a.signedAt?.toMillis() || 0;
+                    const timeB = b.signedAt?.toMillis() || 0;
+                    return timeB - timeA; // Newest first
+                });
+
+                if(sigs.length === 0) {
+                    list.innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-full text-gray-400 space-y-2 py-10">
+                        <i class="ph-fill ph-hourglass-high text-4xl text-gray-300"></i>
+                        <p class="text-sm">A aguardar assinaturas...</p>
+                    </div>`;
+                } else {
+                    sigs.forEach(sig => {
+                        count++;
+                        let timeStr = "";
+                        if(sig.signedAt) {
+                            const d = sig.signedAt.toDate();
+                            timeStr = d.toLocaleTimeString('pt-PT', {hour: '2-digit', minute:'2-digit'});
+                        }
+                        
+                        html += `
+                        <div class="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-xl shadow-sm animate-[fadeIn_0.3s_ease-out]">
+                            <div class="flex items-center gap-3">
+                                <div class="bg-lm-bg text-lm-dark w-10 h-10 rounded-full flex items-center justify-center font-bold">
+                                    ${sig.workerName.charAt(0).toUpperCase()}
+                                </div>
+                                <div>
+                                    <p class="font-bold text-gray-800 text-sm leading-tight">${sig.workerName}</p>
+                                    <p class="text-xs text-gray-500">Mec: ${sig.workerId}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-1 text-green-600 text-xs font-bold bg-green-50 px-2 py-1 rounded-md">
+                                <i class="ph-fill ph-check-circle"></i> ${timeStr}
+                            </div>
+                        </div>`;
+                    });
+                    list.innerHTML = html;
+                }
+                
+                document.getElementById('signatureCount').innerText = count;
+            }, (error) => console.error("Error fetching signatures:", error));
+        }
+
+        // --- WORKER SIMULATION (VISTA COLABORADOR) ---
+        
+        // CORREÇÃO: Função robusta para abrir e fechar a vista de simulação sem bloquear o ecrã
+        window.openSignView = function() {
+            try {
+                // 1. Esconder os modais e overlays do Coordenador de forma forçada
+                const qrModal = document.getElementById('qrModal');
+                if (qrModal) qrModal.classList.add('translate-x-full', 'hide', 'hidden');
+                
+                const overlay = document.getElementById('modalOverlay');
+                if (overlay) overlay.classList.add('hide', 'hidden');
+                
+                // 2. Guardar a referência do ID da mensagem atual
+                window.messageIdToSign = window.currentQrMessageId;
+                
+                // 3. Ocultar todas as outras vistas
+                window.hideAllViews();
+                
+                // 4. Mostrar a vista do Colaborador
+                const colabView = document.getElementById('colaboradorView');
+                if (colabView) colabView.classList.remove('hide');
+                
+                // 5. Repor o formulário ao estado inicial
+                document.getElementById('signForm').reset();
+                document.getElementById('signForm').classList.remove('hide');
+                document.getElementById('signSuccessMsg').classList.add('hide');
+                
+                const btn = document.getElementById('btnSubmitSign');
+                btn.disabled = false;
+                btn.innerHTML = '<span>Confirmar Presença</span> <i class="ph ph-check-circle"></i>';
+
+                // Tentar colocar o título correto, procurando nos allMessages
+                const msg = allMessages.find(m => m.id === window.messageIdToSign);
+                if(msg) {
+                    document.getElementById('colaboradorTopicTitle').innerText = msg.title;
+                } else {
+                    document.getElementById('colaboradorTopicTitle').innerText = "Registo de Briefing de Segurança";
+                }
+
+            } catch (error) {
+                console.error("Erro ao transitar para a simulação:", error);
+            }
+        }
+
+        window.exitSignView = function() {
+            try {
+                // Ao sair da simulação, volta ao ecrã do Coordenador
+                window.showView('coordenadorView');
+            } catch (error) {
+                console.error("Erro ao sair da simulação:", error);
+            }
+        }
+
+        window.submitSignature = async function(e) {
+            e.preventDefault();
+            if(!auth.currentUser || !window.messageIdToSign) return;
+
+            const nameInput = document.getElementById('workerName').value;
+            const idInput = document.getElementById('workerId').value;
+            const btn = document.getElementById('btnSubmitSign');
+
+            try {
+                btn.disabled = true;
+                btn.innerHTML = '<div class="loader !w-5 !h-5 !border-white !border-t-lm-light"></div> A registar...';
+
+                const sigRef = collection(db, 'artifacts', appId, 'public', 'data', 'signatures');
+                await addDoc(sigRef, {
+                    messageId: window.messageIdToSign,
+                    workerName: nameInput,
+                    workerId: idInput,
+                    signedAt: serverTimestamp(),
+                });
+
+                // Show success
+                document.getElementById('signForm').classList.add('hide');
+                document.getElementById('signSuccessMsg').classList.remove('hide');
+
+            } catch(error) {
+                console.error("Error submitting signature:", error);
+                alert("Erro ao registar presença. Tente novamente.");
+                btn.disabled = false;
+                btn.innerHTML = '<span>Confirmar Presença</span> <i class="ph ph-check-circle"></i>';
+            }
+        }
+
+        // --- APP INITIALIZATION ---
+        function initApp() {
+            // Check if URL has a ?sign= parameter (meaning it's a worker scanning the QR code)
+            const urlParams = new URLSearchParams(window.location.search);
+            const signParam = urlParams.get('sign');
+
+            if (signParam) {
+                // Ocultar navegação e entrar direto no modo de assinatura
+                window.messageIdToSign = signParam;
+                document.getElementById('roleSelector').classList.add('hide');
+                document.getElementById('colaboradorView').classList.remove('hide');
+                
+                // Note: Title fetch omitted here for brevity since it's a single file load,
+                // but in a full version we'd fetch the specific doc to get the title.
+                document.getElementById('colaboradorTopicTitle').innerText = "Registo de Briefing de Segurança";
+            } else {
+                // Default Start
+                document.getElementById('roleSelector').classList.remove('hide');
+            }
+        }
+    </script>
+</body>
+</html>
